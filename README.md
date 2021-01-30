@@ -209,7 +209,7 @@ else {
 其实这个标志位的作用是判断对应的索引位置有没有被清空过，那么info2就可以实现局部clear了，不需要全局整个都clear，它还有一个作用，如果它被设置为true了，那代表这个节点走三步可以访问到head节点，所以在dfs的时候，判断reset_flags是不是true就可以了。
 示例代码：
 if(reset_flags[it1SID])则发现了长度为4的环
-### 6.8在前面改进的基础上再来个小改进更上一层楼
+### 6.8在前面改进的基础上更上一层楼
 ```c
 int* reset_flags = new int[nodesNum]();
 memset(reset_flags, -1, sizeof(int) * nodesNum);
