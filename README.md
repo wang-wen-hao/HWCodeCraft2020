@@ -2,7 +2,7 @@
 初赛+复赛代码
 ## 一、问题描述
 题目背景是打击金融犯罪，给了我们账户的转账记录，让我们找出所有的循环转账信息，并按照字典序输出。
-输入信息
+#### 输入信息
 输入为包含资金流水的文本文件，每一行代表一次资金交易记录，包含本端账号ID, 对端账号ID, 转账金额，用逗号隔开。
 本端账号ID和对端账号ID为一个32位的正整数
 转账金额为一个32位的正整数
@@ -12,15 +12,15 @@
 举例如下，其中第一行[1,2,100]表示ID为1的账户给ID为2的账户转账100元：
 1,2,100
 1,3,100
-要求的输出信息：
+#### 要求的输出信息：
 循环转账的路径长度最小为3（包含3）最大为7（包含7），例如账户A给账户B转账，账户B给账户A转账，循环转账的路径长度为2，不满足循环转账条件。
- 
-评判标准是，环的结果正确的情况下，用时越短的胜出。
-## 总体思路&思想
+#### 评判标准是
+环的结果正确的情况下，用时越短的胜出。
+## 二、总体思路&思想
 这道题就是一道有向图找环的问题.其实对于有向图找环的题目，最常用的就是dfs算法，而我们再改进了朴素dfs算法，还针对本题做了许多特定的优化。
 算法主要分为五部分，读数据、建图、拓扑排序、找环、写数据。
-## 读数据
-### 方案一：ifstream
+## 三、读数据
+### 1.方案一：ifstream
 ```c
 void load_data(string path)
 {
@@ -46,7 +46,7 @@ void load_data(string path)
 }
 
 ```
-### 方案二：fscanf
+### 2.方案二：fscanf
 ```c
 void parseInput(string& testFile) {
 	FILE* file = fopen(testFile.c_str(), "r");
@@ -62,7 +62,7 @@ void parseInput(string& testFile) {
 	#endif
 }
 ```
-### 方案三：fread
+### 3.方案三：fread
 ```c
 FILE* file = fopen(path.c_str(), "r");
 char raw[100];
@@ -87,7 +87,7 @@ for (char* sp = buffer;;) {
 }
 
 ```
-### 方案四：mmap（最终方案）
+### 4.方案四：mmap（最终方案）
 ```c
 int fd = open(file_name.c_str(), O_RDONLY);
 int file_size = lseek(fd, 0, SEEK_END);
@@ -106,27 +106,27 @@ for (char* sp = buffer;;)
 }
 
 ```
-## 建图
+## 四、建图
 这一步是进行找环的预备工作，主要是建立入度图、出度图、节点到[0, n )的映射。想得到这些，得先得到节点数量。
 **要点：**
 * unique去重+erase得到节点数量
 * vector提前reserve
 * 哈希表存放节点到索引的映射
 * vector改为数组存储，提前用new 开辟空间
-## 拓扑排序
+## 五、拓扑排序
 因为有很多出度为零和入度为零的点，这些点是不可能构成环的。所以会被删除。
-## 找环(重点！)
-### 基本思想
+## 六、找环(重点！)
+### 6.1基本思想
 找环的思想简单来说，就是，循环从小到大，依此以每个节点作为头节点，从这个节点开始能不能找到环。
-### 常见易错点
+### 6.2常见易错点
 * "8"字型环问题
 * 大环套小环问题
-### 朴素DFS及其问题
+### 6.3朴素DFS及其问题
 最朴素的算法要跑好4个多小时...
-### 针对朴素DFS的第一次改进
+### 6.4针对朴素DFS的第一次改进
 提前存储一层路径
 P2inv = vector<unordered_map<int, vector<int>>>(nodeCnt, unordered_map<int, vector<int>>());
-### 对朴素DFS的第二次改进之双向DFS的由来
+### 6.5对朴素DFS的第二次改进之双向DFS的由来
 last数组指示了走一步能够访问到头节点 vector<bool>
 info数组指示了走两步能够访问到头节点 unordered_map<int, vector<int>>
 info2指示了走三步能否访问到头节点 unordered_map<int, vector<seq>>
@@ -165,7 +165,7 @@ info2指示了走三步能否访问到头节点 unordered_map<int, vector<seq>>
 	}
 
 ```
-### 对双向DFS的改进1
+### 6.6对双向DFS的改进1
 这个这个存储两步的环判断是不是多余的呢？因为在建立info2的时候，如果逆向三步可以返回头节点，那就说明发现了长度为三的环了。这样在建立info2的时候就把长度三的环找到了。
 ```c
 struct seq {
@@ -181,7 +181,7 @@ unordered_map<int, vector<seq>> info2;
 存放的数据是：
 如果k->j->i->head，那么info2[k][索引] = seq(j, i);
 此时，比如头节点的出端节点是id1，如果info2中存在key值为id1，就代表id1走三步可以访问到head节点，那么也就存在长度为4的环，一次类推，第四层可以找到长度为7的环。
-### 对双向DFS的改进2之unordered_map改数组
+### 6.7对双向DFS的改进2之unordered_map改数组
 ```c
 vector<vector<seq>> info2(nodesNum, vector<seq>());
 ```
@@ -209,17 +209,17 @@ else {
 其实这个标志位的作用是判断对应的索引位置有没有被清空过，那么info2就可以实现局部clear了，不需要全局整个都clear，它还有一个作用，如果它被设置为true了，那代表这个节点走三步可以访问到head节点，所以在dfs的时候，判断reset_flags是不是true就可以了。
 示例代码：
 if(reset_flags[it1SID])则发现了长度为4的环
-### 在前面改进的基础上再来个小改进更上一层楼
+### 6.8在前面改进的基础上再来个小改进更上一层楼
 ```c
 int* reset_flags = new int[nodesNum]();
 memset(reset_flags, -1, sizeof(int) * nodesNum);
 reset_flag[a] == head吗？如果等于，那么这个节点就可以走三步访问到head节点，如果不等于，就不会访问到head
 ```
 到这里就是我们单线程下的最优方案了。
-### 多线程找环
+### 6.9多线程找环
 两种线程分配方案的比较
 
-### 其他小改进
+### 6.10其他小改进
 #### push_back vs emplace_back
 原本的：all_path[depth].push_back(circuit(depth, path)); 
 改进的：all_path[depth].emplace_back(depth, path);
@@ -229,8 +229,141 @@ reset_flag[a] == head吗？如果等于，那么这个节点就可以走三步�
 void* memcpy( void* dest, const void* src, std::size_t count );
 参考： https://zh.cppreference.com/w/cpp/string/byte/memcpy 
 
-## 存储结果
+## 七、存储结果
 ### 方案一：ofstream
+```c
+void save_data(string path) {
+	string line;
+	ofstream outfile(path.c_str());
+	outfile << result.size() << endl;
+	for (int i = 0; i < result.size(); ++i) {
+		for (int j = 0; j < result[i].size(); ++j) {
+			outfile << result[i][j];
+			if (j != result[i].size() - 1)
+			outfile << ',';
+		}
+		outfile << endl;
+	}
+	outfile.close();
+}
+```
 ### 方案二：fputs
+```c
+void save_fputs(const string& outputFile) {
+	auto t = clock();
+	FILE* fp = fopen(outputFile.c_str(), "w");
+	char buf[1024];
+	printf("环总数: %d\n", ansCnt);
+#ifdef TEST
+	printf("Total Loops %d\n", ansCnt);
+#endif
+	int idx = sprintf(buf, "%d\n", ansCnt);
+	buf[idx] = '\0';
+	fputs(buf, fp);
+	for (int i = DEPTH_LOW_LIMIT; i <= DEPTH_HIGH_LIMIT; i++) {
+		//sort(ans[i].begin(),ans[i].end());
+		for (auto& x : ans[i]) {
+			auto path = x.path;
+			int sz = path.size();
+			idx = 0;
+			for (int j = 0; j < sz - 1; j++) {
+				idx += sprintf(buf + idx, "%s", idsComma[path[j]].c_str());
+			}
+			idx += sprintf(buf + idx, "%s", idsLF[path[sz - 1]].c_str());
+			buf[idx] = '\0';
+			fputs(buf, fp);
+		}
+	}
+	fclose(fp);
+	cout << clock() - t << endl;
+}
+```
 ### 方案三：fwrite
+```c
+void save_fwrite(const string& outputFile) {
+	auto t = clock();
+	FILE* fp = fopen(outputFile.c_str(), "wb");
+	char buf[1024];
+	printf("环总数: %d\n", ansCnt);
+#ifdef TEST
+	printf("Total Loops %d\n", ansCnt);
+#endif
+	int idx = sprintf(buf, "%d\n", ansCnt);
+	buf[idx] = '\0';
+	fwrite(buf, idx, sizeof(char), fp);
+	for (int i = DEPTH_LOW_LIMIT; i <= DEPTH_HIGH_LIMIT; i++) {
+		//sort(ans[i].begin(),ans[i].end());
+		for (auto& x : ans[i]) {
+			auto path = x.path;
+			int sz = path.size();
+			//idx=0;
+			for (int j = 0; j < sz - 1; j++) {
+				auto res = idsComma[path[j]];
+				fwrite(res.c_str(), res.size(), sizeof(char), fp);
+			}
+			auto res = idsLF[path[sz - 1]];
+			fwrite(res.c_str(), res.size(), sizeof(char), fp);
+		}
+	}
+	fclose(fp);
+	cout << clock() - t << endl;
+}
+```
 ### 方案四：多进程写入
+```c
+void save(const string& outputFile) {//最优版本
+	/*
+	模式：
+		O_RDWR  读写模式
+		O_CREAT 如果指定文件不存在，则创建这个文件 
+		O_TRUNC 如果文件存在，并且以只写/读写方式打开，则清空文件全部内容 
+	*/
+	int fd = open(outputFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+	char* ansNumBuffer = new char[1024];
+	int idx = sprintf(ansNumBuffer, "%d\n", ansNum);
+	/*
+	#include <unistd.h>
+	ssize_t write(int filedes, const void *buf, size_t nbytes);
+	返回值：写入文件的字节数（成功）；-1（出错）
+	write 函数向 filedes 中写入 nbytes 字节数据，数据来源为 buf 。返回值一般总是等于 nbytes，
+	否则就是出错了。常见的出错原因是磁盘空间满了或者超过了文件大小限制。
+	*/
+	write(fd, ansNumBuffer, idx);
+
+	int buffs[] = { 0,buff3,buff3 + buff4,buff3 + buff4 + buff5,buff3 + buff4 + buff5 + buff6,buff3 + buff4 + buff5 + buff6 + buff7 };
+	int iii;
+	pid_t pid = 1;
+	for (int i = 3; i <= 7; i++) {
+		if (pid>0) {//确保只有父进程能产生子进程，否则会爆炸
+			iii = i - 3;
+			pid = fork();
+		}
+	}
+	if (pid == -1) {
+		cerr << "bad" << endl;
+	}
+	else {
+		if (pid == 0) {
+			int i = iii + 3;
+			int j = 0;
+			int buf_size = buffs[iii + 1] - buffs[iii];//每个子进程的buf的大小
+			char* buf = new char[buf_size];
+			int id = 0;
+			while (ans[i - MIN_DEPTH][j] > 0 || ans[i - MIN_DEPTH][j + 1] > 0) {
+				for (int u = 0; u< i - 1; ++u) {
+					for (auto k : idsDouhao[ans[i - MIN_DEPTH][j]])
+						buf[id++] = k;
+					j++;
+				}
+				for (auto k : idsHuanhang[ans[i - MIN_DEPTH][j]])
+					buf[id++] = k;
+				j++;
+			}
+			lseek(fd, idx + buffs[iii], SEEK_SET);//移动到写的位置
+			write(fd, buf, id);
+			exit(0);
+		}
+	}
+
+}
+```
