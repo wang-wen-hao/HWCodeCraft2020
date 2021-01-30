@@ -21,7 +21,7 @@
 ## 二、总体思路&思想
 这道题就是一道有向图找环的问题.其实对于有向图找环的题目，最常用的就是dfs算法，而我们再改进了朴素dfs算法，还针对本题做了许多特定的优化。
 算法主要分为五部分，**读数据、建图、拓扑排序、找环、写数据**。
-![示意图](https://github.com/wang-wen-hao/HWCodeCraft2020/img/节点图.jpg)
+![](https://github.com/wang-wen-hao/HWCodeCraft2020/img/节点图.jpg)
 ## 三、读数据
 ### 1.方案一：ifstream
 ```c
@@ -118,7 +118,7 @@ for (char* sp = buffer;;)
 * vector改为数组存储，提前用new 开辟空间
 ## 五、拓扑排序
 因为有很多出度为零和入度为零的点，这些点是不可能构成环的。所以会被删除。
-![拓扑排序](https://github.com/wang-wen-hao/HWCodeCraft2020/img/拓扑排序.jpg)
+![](https://github.com/wang-wen-hao/HWCodeCraft2020/img/拓扑排序.jpg)
 ## 六、找环(重点！)
 ### 6.1基本思想
 找环的思想简单来说，就是，循环从小到大，依此以每个节点作为头节点，从这个节点开始能不能找到环。
