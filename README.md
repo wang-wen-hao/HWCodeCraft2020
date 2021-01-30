@@ -122,18 +122,30 @@ for (char* sp = buffer;;)
 ## 六、找环(重点！)
 ### 6.1基本思想
 找环的思想简单来说，就是，循环从小到大，依此以每个节点作为头节点，从这个节点开始能不能找到环。
+```c
+for (头节点 : {所有节点}) {
+	dfs(头节点, ...);
+}
+```
 ### 6.2常见易错点
 * "8"字型环问题
 * 大环套小环问题
 ### 6.3朴素DFS及其问题
 最朴素的算法要跑好4个多小时...
+**要点**
+* 遇到比head节点小的，跳过
+* 防止重复访问，维护了一个visited的数组
+![朴素dfs示意图](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/朴素dfs.jpg)
 ### 6.4针对朴素DFS的第一次改进
-提前存储一层路径
-P2inv = vector<unordered_map<int, vector<int>>>(nodeCnt, unordered_map<int, vector<int>>());
-### 6.5对朴素DFS的第二次改进之双向DFS的由来
-last数组指示了走一步能够访问到头节点 vector<bool>
+提前存储路径.
 info数组指示了走两步能够访问到头节点 unordered_map<int, vector<int>>
-info2指示了走三步能否访问到头节点 unordered_map<int, vector<seq>>
+![info数据结构示意图](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/info.jpg)
+如果e号节点在info的key中，则代表号节点走两步可以访问到head节点，也就存在长度为7的环，从而不需要往下深入了。
+### 6.5对朴素DFS的第二次改进之双向DFS的由来
+* last数组指示了走一步能够访问到头节点 vector<bool>
+* info数组指示了走两步能够访问到头节点 unordered_map<int, vector<int>>
+* info2指示了走三步能否访问到头节点 unordered_map<int, vector<seq>>
+![info2数据结构示意图](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/info2.jpg)
 ```c
 	bool *last;//下一个结点是否为头结点
 	last = new bool[nodesNum]();
@@ -185,6 +197,7 @@ unordered_map<int, vector<seq>> info2;
 存放的数据是：
 如果k->j->i->head，那么info2[k][索引] = seq(j, i);
 此时，比如头节点的出端节点是id1，如果info2中存在key值为id1，就代表id1走三步可以访问到head节点，那么也就存在长度为4的环，一次类推，第四层可以找到长度为7的环。
+
 ### 6.7对双向DFS的改进2之unordered_map改数组
 ```c
 vector<vector<seq>> info2(nodesNum, vector<seq>());
@@ -194,6 +207,7 @@ vector<vector<seq>> info2(nodesNum, vector<seq>());
 bool* reset_flags = new bool[nodesNum]();
 ```
 在往info2数组中添加元素之前，先判断这个索引有没有被清空过，如果没有被清空过，那么就先将这个索引里面的数据清空再往里面填入最新数据。如果对应索引的标志被设置为true，说明已经被清空过了，所以直接往info2对应索引中往里面填就可以了，只不过要保证有序。
+![unordered_map改数组](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/unordered_map改数组.jpg)
 代码示例：
 ```c
 if(reset_flags[k_id] == true) {
@@ -219,10 +233,11 @@ int* reset_flags = new int[nodesNum]();
 memset(reset_flags, -1, sizeof(int) * nodesNum);
 reset_flag[a] == head吗？如果等于，那么这个节点就可以走三步访问到head节点，如果不等于，就不会访问到head
 ```
+![unordered_map改数组](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/unordered_map改数组-更上一层楼.jpg)
 到这里就是我们单线程下的最优方案了。
 ### 6.9多线程找环
 两种线程分配方案的比较
-
+![多线程的两种分配方案](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/多线程的两种分配方案.jpg)
 ### 6.10其他小改进
 #### push_back vs emplace_back
 原本的：all_path[depth].push_back(circuit(depth, path)); 
@@ -314,6 +329,8 @@ void save_fwrite(const string& outputFile) {
 }
 ```
 ### 方案四：多进程写入
+![示意图](https://github.com/wang-wen-hao/HWCodeCraft2020/tree/main/img/多进程写入示意图.jpg)
+
 ```c
 void save(const string& outputFile) {//最优版本
 	/*
