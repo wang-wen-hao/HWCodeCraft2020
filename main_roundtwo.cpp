@@ -34,7 +34,7 @@ int ans7[THREAD_COUNT][SIZE];
 
 int i3[THREAD_COUNT], i4[THREAD_COUNT], i5[THREAD_COUNT], i6[THREAD_COUNT], i7[THREAD_COUNT];
 int *is[] = { i3,i4,i5,i6,i7 };
-int buff3[THREAD_COUNT], buff4[THREAD_COUNT], buff5[THREAD_COUNT], buff6[THREAD_COUNT], buff7[THREAD_COUNT]; //buff??????
+int buff3[THREAD_COUNT], buff4[THREAD_COUNT], buff5[THREAD_COUNT], buff6[THREAD_COUNT], buff7[THREAD_COUNT]; 
 int *buffs[] = { buff3,buff4,buff5,buff6,buff7 };
 int ansNum[THREAD_COUNT];
 
@@ -54,14 +54,14 @@ public:
 	unordered_map<int, int> idMapping; //sorted id to 0...n
 	vector<string> idsDouhao;
 	vector<string> idsHuanhang;
-	vector<int> data_pairs; //u-v pairs�����е�id���ݣ��������ظ�
-	vector<int> data_tuple; //���ζѵ�����id, �Զ�id, ���, ��һ������id, �Զ�id�����....
+	vector<int> data_pairs; //u-v pairs
+	vector<int> data_tuple; //
 
-	int *in_deg; //��ȣ���С�ǽڵ���Ŀ
-	int *out_deg; //���ȣ���СҲ�ǽڵ���Ŀ
-	int *buff_count;//�ַ���������
+	int *in_deg; 
+	int *out_deg; 
+	int *buff_count;
 
-	int nodesNum; //��¼�ڵ�id����Ŀ
+	int nodesNum; 
 	int Items = CacheLineSize / sizeof(float);
 
 
@@ -78,7 +78,7 @@ public:
 	}
 
 
-	//to do: mmap����ȡ����id�ͶԶ�id���ݣ�����ŵ�һ��vector���У�����Ϊ�˵õ����е�id��
+	//mmap
 	void parseInput(string& file_name) {
 		int v, u, w;
 		int fd = open(file_name.c_str(), O_RDONLY);
@@ -111,28 +111,28 @@ public:
 
 		Graph.resize(nodesNum);//
 		GraphIn.resize(nodesNum);
-		in_deg = new int[nodesNum](); //��ȣ���С�ǽڵ���Ŀ
-		out_deg = new int[nodesNum](); //���ȣ���СҲ�ǽڵ���Ŀ
+		in_deg = new int[nodesNum](); 
+		out_deg = new int[nodesNum](); 
 		buff_count = new int[nodesNum]();
 
-		nodesNum = 0; //����Ҫ����������ڵ��������¼���Ϊ0
+		nodesNum = 0;
 		for (auto& x : data_pairs) {
-			string tmp = to_string(x);//ֻ��Ҫto_stringһ��
-			idsDouhao.push_back(tmp + ','); //������id�ö��Ÿ����ͽ�ȥ
-			idsHuanhang.push_back(tmp + '\n'); //������id�û��з������ͽ�ȥ
-			buff_count[nodesNum] = tmp.size() + 1;//���ֵ��ַ����ȼ���һλ����
-			idMapping[x] = nodesNum++; // ��¼id����������ǰ���������ں����ѯ���졣
+			string tmp = to_string(x);
+			idsDouhao.push_back(tmp + ','); 
+			idsHuanhang.push_back(tmp + '\n'); 
+			buff_count[nodesNum] = tmp.size() + 1;
+			idMapping[x] = nodesNum++; 
 			
 		}
 
-		int sz = data_tuple.size();  //sz�����ı���
+		int sz = data_tuple.size();  
 		for (int i = 0; i < sz; i += 3) {
-			int u = idMapping[data_tuple[i]]; //��ӳ���ı���id
-			int v = idMapping[data_tuple[i + 1]]; //��ӳ���ĶԶ�id
-			int w = data_tuple[i + 2];			//ת�˽��
-												//���Զ�id�ͽ�����ͽ�Graph����ʵ��������������Ǽ����˽�Ϊ�˱���ά�Ȳ��䣬�������˸��ṹ����һ��
+			int u = idMapping[data_tuple[i]]; 
+			int v = idMapping[data_tuple[i + 1]]; 
+			int w = data_tuple[i + 2];			
+												
 			Graph[u].push_back(items(v, w));
-			GraphIn[v].push_back(items(u, w));//������id�ͽ�����ͽ�GraphIn				
+			GraphIn[v].push_back(items(u, w));		
 			++in_deg[v];
 			++out_deg[u];
 		}
@@ -141,10 +141,10 @@ public:
 
 	}
 
-	//degs--��Ȼ��߳��ȣ���ȥ����Ȼ��߳���Ϊ0�Ľڵ�
+	
 	void topoSortIn() {
 
-		queue<int> q; //		
+		queue<int> q; 		
 		for (int i = 0; i < nodesNum; i += Items) {
 			for (int ii = 0; ii < Items && i + ii < nodesNum; ++ii) {
 				if (0 == in_deg[i + ii])
@@ -152,18 +152,17 @@ public:
 			}
 		}
 
-		while (!q.empty()) { //??????????
-			int u = q.front(); //????��???????????????????????????��??
-			q.pop(); //????
-					 //??????????????��???id??????
+		while (!q.empty()) { 
+			int u = q.front(); 
+			q.pop(); 
 			for (auto& v : Graph[u]) {
 				if (v.secondID == -1) break;
-				if (0 == --in_deg[v.secondID]) //?????????????????0???????????
+				if (0 == --in_deg[v.secondID]) 
 					q.push(v.secondID);
 			}
 		}
 
-		//????cacheline
+		
 		for (int i = 0; i < nodesNum; i += Items) {
 			for (int ii = 0; ii < Items && i + ii < nodesNum; ++ii) {
 				if (in_deg[i + ii] == 0 && (!Graph[i + ii].empty())) {
@@ -184,7 +183,7 @@ public:
 
 		for (int i = 0; i < nodesNum; i += Items) {
 			for (int ii = 0; ii < Items && i + ii < nodesNum; ++ii) {
-				//��������lambda����ʽ
+				
 				sort(GraphIn[i + ii].begin(), GraphIn[i + ii].end(), \
 					[](items a, items b) {
 					return a.secondID < b.secondID;
@@ -207,7 +206,7 @@ public:
 		seq(items f, items s) :first(f), second(s) {};
 	};
 
-	//���ȽϺ���
+	
 	inline bool compare(int x, int y)
 	{
 		if ((double(y) / double(x)) >= 0.2 && (double(y) / double(x)) <= 3.0)
@@ -306,10 +305,10 @@ public:
 				}
 			}
 
-			//�����ǵ�һ��
+			
 			vertext_visit[head] = true;
 			auto it1 = lower_bound(Graph[head].begin(), Graph[head].end(), head, \
-				[](items a, int b) {return a.secondID < b; }); //iti??????nodesOuti?????
+				[](items a, int b) {return a.secondID < b; }); 
 			for (; it1 != Graph[head].end(); ++it1) {
 				const int it1SID = it1->secondID;
 				const int it1Money = it1->money;
@@ -472,8 +471,8 @@ public:
 		}
 
 		for (int i = 0; i < THREAD_COUNT; i++) {
-			threads[i].join();//joinû�з���ֵ���޷������ж�
-							  //cout << "thread " << i << " finish!" << endl;
+			threads[i].join();
+							 
 		}
 	}
 

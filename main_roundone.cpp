@@ -171,7 +171,7 @@ public:
 			}
 		}
 
-		//¶ÔÆëcacheline
+		
 		for (int i = 0; i < nodesNum; i += Items) {
 			for (int ii = 0; ii < Items && i + ii < nodesNum; ++ii) {
 				if (degs[i + ii] == 0) {
